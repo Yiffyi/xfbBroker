@@ -1,9 +1,5 @@
 
-interface Env {
-	BROKER: KVNamespace;
-}
-
-interface User {
+export interface User {
 	name: string;
 	openId: string;
 	sessionId: string;

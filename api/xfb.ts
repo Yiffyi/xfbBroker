@@ -1,7 +1,7 @@
 const xfbApp = "https://webapp.xiaofubao.com"
 const xfbPay = "https://pay.xiaofubao.com"
 
-export default {
+export const xfb = {
     async xfbPostJson(url: string, sessionId: string, payload: any) {
         let h = new Headers();
         h.append('Content-Type', 'application/json;charset=UTF-8');
@@ -23,7 +23,7 @@ export default {
         });
     },
 
-    async getCardMoney(sessionId, ymId) {
+    async getCardMoney(sessionId: string, ymId: string): Promise<string> {
         return this.xfbPostJson(xfbApp + "/card/getCardMoney", sessionId, {
             ymId
         }).then((j) => j.data)
@@ -34,7 +34,7 @@ export default {
         let d = new Date(
             new Date().toLocaleString('en-US', { timeZone: "Asia/Shanghai" })
         );
-        function pad(s) { return ("0" + s).substr(-2) }
+        let pad = (s: number) => { return ("0" + s).substr(-2) }
         let queryTime = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate())
 
         return this.xfbPostJson(xfbApp + "/routeauth/auth/route/user/cardQuerynoPage", sessionId, {
@@ -130,8 +130,12 @@ export default {
                 throw new Error('API bad statusCode: ' + JSON.stringify(j))
             }
 
+            let cookie = resp.headers.get("set-cookie")
+            if (!cookie) throw new Error('API no cookie returned: ' + JSON.stringify(j))
             const regex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g;
-            const sessionId = resp.headers.get("set-cookie").match(regex)[0];
+            const sessionId = cookie.match(regex)?.[0];
+
+            if (!sessionId) throw new Error('No sessionId found in cookie: ' + cookie)
             return {
                 data: j["data"],
                 sessionId
@@ -139,55 +143,39 @@ export default {
         });
     },
 
-    async checkAndPay(env, sessionId, ymUserId) {
-        let trans = await this.cardQuerynoPage(new Date(), sessionId, ymUserId)
-        console.log(trans)
-        for (var t of trans) {
-            if (parseFloat(t.money) < 0 && await env.BROKER.get("TRANS:" + t.serialno) === null) {
-                let tran_no = await this.rechargeOnCard(t.money.substring(1), sessionId, ymUserId)
-                await this.payChoose(tran_no)
-                await this.doPay(tran_no)
-                await env.BROKER.put("TRANS:" + t.serialno, t.money.substring(1), { expirationTtl: 2592000 })
+    // async payAll(env) {
+    //     const CONFIG = JSON.parse(await env.BROKER.get("CONFIG"))
+    //     var changed = false;
+    //     for (var i in CONFIG.accounts) {
+    //         try {
+    //             const a = CONFIG.accounts[i]
+    //             await this.checkAndPay(env, a.sessionId, a.ymUserId)
+    //         }
+    //         catch (e) {
+    //             CONFIG.accounts[i].failed++
+    //             changed = true
+    //         }
+    //     }
+    //     if (changed) await env.BROKER.put("CONFIG", JSON.stringify(CONFIG))
+    // },
 
-                // console.log(parseFloat(i.money))
-                // console.log(await env.TRANS.get("TRANS:" + i.serialno))
-            }
-        }
-    },
+    // async garbageCollection(env) {
+    //     const CONFIG = JSON.parse(await env.BROKER.get("CONFIG"))
+    //     let changed = false;
+    //     let a = []
+    //     for (var v of CONFIG.accounts) {
+    //         if (v.failed >= 5) {
+    //             changed = true;
+    //         } else {
+    //             a.push(v)
+    //         }
+    //     }
 
-    async payAll(env) {
-        const CONFIG = JSON.parse(await env.BROKER.get("CONFIG"))
-        var changed = false;
-        for (var i in CONFIG.accounts) {
-            try {
-                const a = CONFIG.accounts[i]
-                await this.checkAndPay(env, a.sessionId, a.ymUserId)
-            }
-            catch (e) {
-                CONFIG.accounts[i].failed++
-                changed = true
-            }
-        }
-        if (changed) await env.BROKER.put("CONFIG", JSON.stringify(CONFIG))
-    },
-
-    async garbageCollection(env) {
-        const CONFIG = JSON.parse(await env.BROKER.get("CONFIG"))
-        let changed = false;
-        let a = []
-        for (var v of CONFIG.accounts) {
-            if (v.failed >= 5) {
-                changed = true;
-            } else {
-                a.push(v)
-            }
-        }
-
-        if (changed) {
-            CONFIG.accounts = a;
-            await env.BROKER.put("CONFIG", JSON.stringify(CONFIG))
-        }
-    },
+    //     if (changed) {
+    //         CONFIG.accounts = a;
+    //         await env.BROKER.put("CONFIG", JSON.stringify(CONFIG))
+    //     }
+    // },
 
     //   async fetch(request, env) {
     //     try {

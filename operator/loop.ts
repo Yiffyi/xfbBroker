@@ -1,4 +1,4 @@
-import { User, xfb } from "./deps.ts";
+import { xfb } from "./deps.ts";
 import users from "./accounts.json" assert { type: "json" };
 // const transDone: { [id: string]: string; } = {}
 // console.log(CF_LISTKEYS_URL)

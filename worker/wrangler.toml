@@ -1,0 +1,10 @@
+name = "xfb-worker"
+compatibility_date = "2023-03-26"
+main = './portal.ts'
+
+workers_dev = false
+route = { pattern = "xfb.lklk.org/_/*", zone_name = "lklk.org" }
+
+kv_namespaces = [
+  { binding = "BROKER", id = "e78f3d0bd9dc4e009199fcdee5ca2317", preview_id = "9ef651ab9bf84f3dad83cefca79c3206" }
+]

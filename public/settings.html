@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="/css/output.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="bg-gray-100 min-h-screen">
+    <div class="max-w-md mx-auto py-12">
+      <h1 class="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
+      <form method="post" action="/_/settings" class="bg-white rounded-lg px-8 pt-6 pb-8 mb-4">
+        <input id="ymUserId" name="ymUserId" hidden>
+        <div class="mb-4">
+          <label class="block text-gray-700 font-bold mb-2" for="threshold">Balance threshold:</label>
+          <input
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="threshold" name="threshold" type="number" placeholder="Enter threshold" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 font-bold mb-2" for="auto-recharge">Auto-recharge:</label>
+          <div class="relative inline-block w-12 mr-2 align-middle select-none">
+            <input type="checkbox" name="enabled" id="enabled"
+              class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none peer checked:translate-x-full transition-transform">
+            <label for="enabled"
+              class="toggle-label block h-6 rounded-full bg-gray-300 peer-checked:bg-green-500 transition"></label>
+          </div>
+          <label for="auto-recharge" class="text-xs text-gray-700">Enable auto-recharge</label>
+        </div>
+        <div class="flex items-center justify-between">
+          <button
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            type="submit">
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+    <div class="flex justify-center items-center mt-6 mb-2 text-sm text-gray-500">
+      Made with ❤ by Your Name and ChatGPT
+    </div>
+  </div>
+  <script>
+    const searchParams = new URLSearchParams(document.location.search)
+    document.getElementById("ymUserId").value = searchParams.get("ymUserId")
+
+    fetch("/_/settings" + document.location.search).then(async r => {
+      let d = await r.json(); console.log(d)
+      document.getElementById("threshold").value = d.threshold
+      document.getElementById("enabled").checked = d.enabled
+    })
+  </script>
+</body>
+
+</html>
